@@ -1,0 +1,16 @@
+<div class="diary-entry">
+  <div class="diary-entry__content">
+    <div class="diary-entry__date">
+      <div class="diary-entry__icon">
+        <span class="material-icons">calendar_today</span>
+      </div>
+      <div class="diary-entry__dateContent">
+        {{ post.date }}
+      </div>
+    </div>
+    <div class="diary-entry__post">
+      {{ post.message }}
+    </div>
+  </div>
+  <ng-content></ng-content>
+</div>
