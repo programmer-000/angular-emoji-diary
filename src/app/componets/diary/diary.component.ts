@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 
-import * as moment from 'moment';
+import * as uuid from 'uuid';
 
 import { DiaryEntry } from '../../interfaces/diary-entry';
+import { Message } from '../../shared/models/message.model';
 
 @Component({
   selector: 'app-diary',
@@ -12,11 +13,10 @@ import { DiaryEntry } from '../../interfaces/diary-entry';
 })
 export class DiaryComponent {
   posts: DiaryEntry[] = [];
-
   showEmojiPicker = false;
   message: FormControl = new FormControl('', [Validators.required]);
-
-  private index: number;
+  currentId: string;
+  editFlag = false;
 
   toggleEmojiPicker(): void {
     this.showEmojiPicker = !this.showEmojiPicker;
@@ -31,22 +31,36 @@ export class DiaryComponent {
     this.message.patchValue(value + $event.emoji.native);
   }
 
-  addPost(): void {
-    const {value: message} = this.message;
-    const date = moment().format('hh:mm A | MMM DD, YYYY');
-    const index = this.index ?? this.posts.length; // check if index is defined otherwise return array length
-    this.posts = [...this.posts.slice(0, index), { message, date }, ...this.posts.slice(index + 1)];
+  save(): void {
+    this.currentId = this.editFlag ? this.currentId : uuid.v4();
+    const message = new Message(this.message.value, this.currentId);
+    if (this.editFlag) {
+      this.updatePost(message);
+    } else {
+      this.posts.push(message);
+    }
     this.message.reset();
-    this.index = undefined; // clear previously selected index
     this.hideEmojiPicker();
   }
 
-  editPost(i, post): void {
-    this.message.setValue(post.message);
-    this.index = i;
+  updatePost(message): void {
+    this.posts = this.posts.map(post => {
+      if (this.currentId === post.id) {
+        return {...message};
+      }
+      return {...post};
+    });
+    this.editFlag = false;
   }
 
-  removePost(i): void {
-    this.posts.splice(i, 1);
+  editPost(post): void {
+    this.message.setValue(post.message);
+    this.currentId = post.id;
+    this.editFlag = true;
+  }
+
+  removePost(id): void {
+    this.posts = this.posts.filter(n => n.id !== id);
   }
 }
+
